@@ -1,36 +1,38 @@
 # Import the dependencies.
-from flask import Flask, jsonify 
-from sqlalchemy import create_engine,inspect
+from flask import Flask, jsonify; 
+from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.automap import automap_base
 import numpy as np
-import datetime
+from datetime import datetime, timedelta
 
 
 #################################################
 # Database Setup
 #################################################
 # Create an SQLite engine
-engine = create_engine("sqlite:///Resources/hawaii.sqlite")
+engine = create_engine("sqlite:///your_hawaii.sqlite")
+# Create a session
+session = Session(engine)
+
 
 # Reflect the database into a new model
 Base = automap_base()
 
 # Reflect the tables
 Base.prepare(autoload_with=engine)
-print(Base.classes.keys())
 
-# Check the tables present in the database 
+# # Check the tables present in the database 
 inspector = inspect(engine)
 print(inspector.get_table_names())
+
+session.close()
 
 # Save references to each table
 Measurement = Base.classes.measurement
 Station = Base.classes.station
-
 # Create a session
 session = Session(engine)
-
 #################################################
 # Flask Setup
 #################################################
@@ -56,9 +58,9 @@ def home():
 
 # Implement the logic to retrieve precipitation data for the last 12 months
 # Calculate the date one year from the last date in data set.
+one_year = datetime.date(2017,8,23)-datetime.timedelta(days=365)
 @app.route("/api/v1.0/precipitation")
 def precipitation():
-    one_year = datetime.date(2017,8,23) - datetime.timedelta(days=365) 
     precipitation = session.query(Measurement.date, Measurement.prcp)\
     .filter(Measurement.date >= one_year).all()
    
