@@ -2,7 +2,8 @@ from flask import Flask, jsonify
 from sqlalchemy import create_engine, func
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.automap import automap_base
-import datetime
+from datetime import datetime
+import numpy as np
 
 app = Flask(__name__)
 
@@ -96,7 +97,7 @@ def temp_start(start):
     session = Session(engine)
 
         # Convert start date string to datetime object
-    start_date = datetime.datetime.strptime(start, "%Y-%m-%d")
+    start_date = datetime.strptime(start, "%Y-%m-%d")
 
         # Query TMIN, TAVG, and TMAX for dates greater than or equal to the start date
     results = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs))\
@@ -105,23 +106,19 @@ def temp_start(start):
     session.close()
 
         # Create a dictionary with the results
-    temperature_stats = {
-            "TMIN": results[0][0],
-            "TAVG": results[0][1],
-            "TMAX": results[0][2]
-        }
+    temperature_stats = list(np.ravel(results))
 
         # Return the data as JSON
     return jsonify(temperature_stats)
 
-# @app.route("/api/v1.0/<start>/<end>")
+@app.route("/api/v1.0/<start>/<end>")
 def temp_start_end(start, end):
     # Implement the logic to calculate TMIN, TAVG, and TMAX for dates between start and end (inclusive)
     session = Session(engine)
     try:
         # Convert start and end date strings to datetime objects
-        start_date = datetime.datetime.strptime(start, "%Y-%m-%d")
-        end_date = datetime.datetime.strptime(end, "%Y-%m-%d")
+        start_date = datetime.strptime(start, "%Y-%m-%d")
+        end_date = datetime.strptime(end, "%Y-%m-%d")
     except ValueError:
         return jsonify({"error": "Invalid date format. Use the format YYYY-MM-DD."}),
 
@@ -137,11 +134,7 @@ def temp_start_end(start, end):
     session.close()
 
     # Create a dictionary with the results
-    temperature_stats = {
-        "TMIN": results[0][0],
-        "TAVG": results[0][1],
-        "TMAX": results[0][2]
-    }
+    temperature_stats = list(np.ravel(results))
 
     # Return the data as JSON
     return jsonify(temperature_stats)
